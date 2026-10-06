@@ -1,1 +1,47 @@
+name: SOX Morning Telegram Alert
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "10 0 * * 2-5"
+
+permissions:
+  contents: read
+
+jobs:
+  send-alert:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+
+    env:
+      TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+      TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+      MODEL_WINDOW: "504"
+      DATA_RETRIES: "3"
+      RETRY_SECONDS: "45"
+      OUTPUT_DIR: "output"
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: python -m pip install -r requirements.txt
+
+      - name: Run analysis and send Telegram
+        run: python sox_telegram_alert.py
+
+      - name: Upload result artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: sox-alert-${{ github.run_id }}
+          path: output/
+          if-no-files-found: ignore
+          retention-days: 14
 
