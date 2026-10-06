@@ -1,47 +1,42 @@
-name: SOX Morning Telegram Alert
+name: SOX Morning Alert and Post-Close Evaluation
 
 on:
-  workflow_dispatch:
+  # GitHub Actions cron은 UTC 기준입니다.
+  # 00:10 UTC = KST 09:10: 아침 예측
+  # 06:45 UTC = KST 15:45: 종가 확인·사후평가
   schedule:
     - cron: "10 0 * * 2-5"
+    - cron: "45 6 * * 1-5"
+  workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
-  send-alert:
+  morning-alert:
+    if: github.event_name == 'workflow_dispatch' || github.event.schedule == '10 0 * * 2-5'
     runs-on: ubuntu-latest
     timeout-minutes: 8
-
     env:
+      TZ: Asia/Seoul
       TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
       TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
       MODEL_WINDOW: "504"
       DATA_RETRIES: "3"
       RETRY_SECONDS: "45"
       OUTPUT_DIR: "output"
-
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-
+          cache: pip
       - name: Install dependencies
         run: python -m pip install -r requirements.txt
-
-      - name: Run analysis and send Telegram
+      - name: Run morning prediction and send Telegram
         run: python sox_telegram_alert.py
-
-      - name: Upload result artifact
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: sox-alert-${{ github.run_id }}
-          path: output/
-          if-no-files-found: ignore
-          retention-days: 14
-
+      - name: Save prediction for post-close evaluation
+        run: |
+          git config user.name "github-actions[bot]"
