@@ -5,7 +5,7 @@ on:
   # 00:10 UTC = KST 09:10: 아침 예측
   # 06:45 UTC = KST 15:45: 종가 확인·사후평가
   schedule:
-    - cron: "10 0 * * 2-5"
+    - cron: "20 0 * * 2-5"
     - cron: "45 6 * * 1-5"
   workflow_dispatch:
 
