@@ -16,7 +16,7 @@ jobs:
   morning-alert:
     if: github.event_name == 'workflow_dispatch' || github.event.schedule == '30 0 * * 2-5'
     runs-on: ubuntu-latest
-    timeout-minutes: 8
+    timeout-minutes: 15
     env:
       TZ: Asia/Seoul
       TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
