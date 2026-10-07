@@ -5,7 +5,7 @@ on:
   # 00:10 UTC = KST 09:10: 아침 예측
   # 06:45 UTC = KST 15:45: 종가 확인·사후평가
   schedule:
-    - cron: "20 0 * * 2-5"
+    - cron: "30 0 * * 2-5"
     - cron: "45 6 * * 1-5"
   workflow_dispatch:
 
@@ -14,7 +14,7 @@ permissions:
 
 jobs:
   morning-alert:
-    if: github.event_name == 'workflow_dispatch' || github.event.schedule == '10 0 * * 2-5'
+    if: github.event_name == 'workflow_dispatch' || github.event.schedule == '30 0 * * 2-5'
     runs-on: ubuntu-latest
     timeout-minutes: 8
     env:
@@ -22,8 +22,8 @@ jobs:
       TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
       TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
       MODEL_WINDOW: "504"
-      DATA_RETRIES: "3"
-      RETRY_SECONDS: "45"
+      DATA_RETRIES: "10"
+      RETRY_SECONDS: "60"
       OUTPUT_DIR: "output"
     steps:
       - name: Checkout
