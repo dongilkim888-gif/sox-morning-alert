@@ -2,7 +2,7 @@ name: SOX Morning Alert and Post-Close Evaluation
 
 on:
   # GitHub Actions cron은 UTC 기준입니다.
-  # 00:10 UTC = KST 09:30: 아침 예측
+  # 00:30 UTC = KST 09:30: 아침 예측
   # 06:45 UTC = KST 15:45: 종가 확인·사후평가
   schedule:
     - cron: "30 0 * * 2-5"
