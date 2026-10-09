@@ -82,9 +82,17 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add evaluation/
-          git diff --cached --quiet || git commit -m "Record post-close evaluation [skip ci]"
-          git push
+          if [ -d evaluation ]; then
+            git add evaluation/
+            if ! git diff --cached --quiet; then
+              git commit -m "Record post-close evaluation [skip ci]"
+              git push
+            else
+              echo "평가 변경사항이 없어 commit을 생략합니다."
+            fi
+          else
+            echo "evaluation 폴더가 없어 commit을 생략합니다."
+          fi
 
       - name: Upload evaluation artifact
         if: always()
