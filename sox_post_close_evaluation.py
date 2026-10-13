@@ -17,6 +17,15 @@ OUTPUT_DIR = Path(os.getenv("OUTPUT_DIR", "output"))
 EVAL_DIR = Path(os.getenv("EVAL_DIR", "evaluation"))
 
 
+def write_status(target: pd.Timestamp, status: str, reason: str) -> None:
+    EVAL_DIR.mkdir(parents=True, exist_ok=True)
+    path = EVAL_DIR / f"status_{target:%Y%m%d}.json"
+    path.write_text(
+        json.dumps({"date": str(target.date()), "status": status, "reason": reason}, ensure_ascii=False, indent=2),
+        encoding="utf-8",
+    )
+
+
 def get_closes(tickers: list[str], target: pd.Timestamp) -> dict[str, float]:
     start = target.strftime("%Y-%m-%d")
     end = (target + pd.Timedelta(days=2)).strftime("%Y-%m-%d")
@@ -49,12 +58,16 @@ def main() -> None:
 
     prediction_path = OUTPUT_DIR / f"alert_{target:%Y%m%d}.json"
     if not prediction_path.exists():
-        print(f"오늘 아침 예측 파일이 없어 평가를 생략합니다: {prediction_path}")
+        reason = f"오늘 아침 예측 파일이 없어 평가를 생략합니다: {prediction_path}"
+        print(reason)
+        write_status(target, "skipped", reason)
         return
     payload = json.loads(prediction_path.read_text(encoding="utf-8"))
     predictions = {x["ticker"]: x for x in payload.get("results", [])}
     if not predictions:
-        print("예측 결과가 비어 있어 평가를 생략합니다.")
+        reason = "예측 결과가 비어 있어 평가를 생략합니다."
+        print(reason)
+        write_status(target, "skipped", reason)
         return
 
     closes = get_closes(list(STOCKS.values()), target)
@@ -71,6 +84,7 @@ def main() -> None:
         predicted_close = float(p["predicted_close"])
         open_px = float(p["today_open"] if "today_open" in p else p["open"])
         predicted_intraday = float(p["predicted_intraday"] if "predicted_intraday" in p else p["prediction"])
+        sox_previous_return = float(p["sox_previous_return"] if "sox_previous_return" in p else p["sox_ret"])
         actual_intraday = actual_close / open_px - 1
         error_krw = predicted_close - actual_close
         error_pct = predicted_close / actual_close - 1
@@ -78,7 +92,7 @@ def main() -> None:
         range_high = float(p.get("range_high_68", open_px * (1 + predicted_intraday + p.get("uncertainty", 0))))
         rows.append({
             "date": str(target.date()), "name": name, "ticker": ticker,
-            "sox_previous_return_pct": pct(float(p["sox_previous_return"])),
+            "sox_previous_return_pct": pct(sox_previous_return),
             "open": open_px, "predicted_close": predicted_close, "actual_close": actual_close,
             "error_krw": round(error_krw, 2), "abs_error_krw": round(abs(error_krw), 2),
             "error_pct": pct(error_pct), "abs_error_pct": pct(abs(error_pct)),
@@ -93,7 +107,9 @@ def main() -> None:
         })
 
     if not rows:
-        print("평가할 종목이 없습니다.")
+        reason = "실제 종가를 받은 종목이 없어 평가를 생략합니다."
+        print(reason)
+        write_status(target, "skipped", reason)
         return
     EVAL_DIR.mkdir(parents=True, exist_ok=True)
     csv_path = EVAL_DIR / "daily_evaluation.csv"
