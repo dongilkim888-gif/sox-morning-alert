@@ -86,6 +86,9 @@ jobs:
       TZ: Asia/Seoul
       OUTPUT_DIR: "output"
       EVAL_DIR: "evaluation"
+      SEND_TELEGRAM: "1"
+      TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+      TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
     steps:
       - name: Checkout latest prediction files
         uses: actions/checkout@v4
