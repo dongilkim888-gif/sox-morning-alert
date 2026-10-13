@@ -1,0 +1,24 @@
+{
+  "as_of": "2026-10-13",
+  "n": 2,
+  "by_stock": {
+    "원익IPS": {
+      "n": 1,
+      "mae_pct_points": 3.527219,
+      "mae_krw": 4599.49,
+      "direction_accuracy_all": 1.0,
+      "direction_accuracy_nonflat": 1.0,
+      "range_68_coverage": 1.0,
+      "mean_error_pct_points": -3.527219
+    },
+    "유진테크": {
+      "n": 1,
+      "mae_pct_points": 3.334864,
+      "mae_krw": 5352.46,
+      "direction_accuracy_all": 1.0,
+      "direction_accuracy_nonflat": 1.0,
+      "range_68_coverage": 1.0,
+      "mean_error_pct_points": -3.334864
+    }
+  }
+}
