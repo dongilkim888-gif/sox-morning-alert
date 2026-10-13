@@ -113,6 +113,7 @@ jobs:
             git add evaluation/
             if ! git diff --cached --quiet; then
               git commit -m "Record post-close evaluation [skip ci]"
+              git pull --rebase origin main
               git push
             else
               echo "평가 변경사항이 없어 commit을 생략합니다."
