@@ -2,9 +2,12 @@
 """아침 예측 JSON과 장 마감 후 실제 종가를 비교해 오차를 누적 기록한다."""
 from __future__ import annotations
 
+import argparse
 import json
 import os
 import time
+import urllib.parse
+import urllib.request
 from datetime import datetime
 from pathlib import Path
 from zoneinfo import ZoneInfo
@@ -107,9 +110,61 @@ def classify(ret: float) -> str:
     return "flat"
 
 
+def send_telegram(text: str) -> None:
+    """SEND_TELEGRAM=1일 때만 오후 평가 결과를 Telegram으로 발송한다."""
+    if os.getenv("SEND_TELEGRAM", "0") != "1":
+        return
+    token = os.environ["TELEGRAM_BOT_TOKEN"]
+    chat_id = os.environ["TELEGRAM_CHAT_ID"]
+    data = urllib.parse.urlencode({"chat_id": chat_id, "text": text}).encode("utf-8")
+    url = f"https://api.telegram.org/bot{token}/sendMessage"
+    request = urllib.request.Request(url, data=data, method="POST")
+    with urllib.request.urlopen(request, timeout=20) as response:
+        body = response.read().decode("utf-8")
+        if response.status >= 300 or '"ok":true' not in body:
+            raise RuntimeError(f"Telegram 사후평가 발송 실패: HTTP {response.status}")
+
+
+def make_telegram_message(target: pd.Timestamp, rows: list[dict], report: dict) -> str:
+    lines = [f"[SOX 사후평가] {target.date()}", ""]
+    for row in rows:
+        lines.extend([
+            row["name"],
+            f"예상 종가: {row['predicted_close']:,.0f}원",
+            f"실제 종가: {row['actual_close']:,.0f}원",
+            f"오차: {row['error_krw']:+,.0f}원 ({row['error_pct']:+.2f}%)",
+            f"예상범위 포함: {'예' if row['in_range_68'] else '아니오'}",
+            "",
+        ])
+    lines.append(f"누적 평가표본: {report['n']}개")
+    for name, metrics in report["by_stock"].items():
+        lines.append(
+            f"{name}: MAE {metrics['mae_pct_points']:.2f}% | "
+            f"방향 적중률 {metrics['direction_accuracy_all']:.1%} | "
+            f"범위 포함률 {metrics['range_68_coverage']:.1%}"
+        )
+    lines.append("")
+    lines.append("※ 연구·분석용 결과이며 투자 권유나 주문 신호가 아닙니다.")
+    return "\n".join(lines)
+
+
 def main() -> None:
-    target = pd.Timestamp(datetime.now(KST).date())
-    if target.weekday() not in (0, 1, 2, 3, 4):
+    global OUTPUT_DIR, EVAL_DIR
+    parser = argparse.ArgumentParser(description="아침 예측 JSON과 실제 종가를 비교하는 사후평가")
+    parser.add_argument("--date", help="평가 날짜 YYYY-MM-DD. 미지정 시 현재 KST 날짜")
+    parser.add_argument("--allow-nonbusiness", action="store_true", help="주말/휴일도 조회를 시도")
+    parser.add_argument("--output-dir", default=str(OUTPUT_DIR), help="아침 예측 JSON 폴더")
+    parser.add_argument("--eval-dir", default=str(EVAL_DIR), help="평가 결과 폴더")
+    args = parser.parse_args()
+
+    target = pd.Timestamp(args.date) if args.date else pd.Timestamp(datetime.now(KST).date())
+    output_dir = Path(args.output_dir)
+    eval_dir = Path(args.eval_dir)
+    # 수동 옵션을 반영하기 위해 전역 경로를 이번 실행에만 교체한다.
+    OUTPUT_DIR = output_dir
+    EVAL_DIR = eval_dir
+
+    if target.weekday() not in (0, 1, 2, 3, 4) and not args.allow_nonbusiness:
         print(f"사후평가 생략: {target.date()}은 평일이 아닙니다.")
         return
 
@@ -231,6 +286,9 @@ def main() -> None:
         encoding="utf-8",
     )
 
+    telegram_message = make_telegram_message(target, rows, report)
+    send_telegram(telegram_message)
+
     print(f"사후평가 완료: {target.date()}")
     for row in rows:
         print(
@@ -239,6 +297,8 @@ def main() -> None:
             f"오차 {row['error_krw']:+,.0f}원 ({row['error_pct']:+.2f}%)"
         )
     print(f"누적 평가표본: {len(combined)}개 | 저장: {csv_path}")
+    if os.getenv("SEND_TELEGRAM", "0") == "1":
+        print("Telegram 사후평가 발송 완료")
 
 
 if __name__ == "__main__":
