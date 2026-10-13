@@ -8,13 +8,28 @@ on:
     - cron: "30 0 * * 2-5"
     - cron: "45 6 * * 1-5"
   workflow_dispatch:
+    inputs:
+      run_mode:
+        description: "수동 실행할 작업을 선택하세요"
+        required: true
+        default: "morning"
+        type: choice
+        options:
+          - morning
+          - post_close
+          - both
+      evaluation_date:
+        description: "사후평가 날짜 YYYY-MM-DD (비워두면 현재 KST 날짜)"
+        required: false
+        default: ""
+        type: string
 
 permissions:
   contents: write
 
 jobs:
   morning-alert:
-    if: github.event_name == 'workflow_dispatch' || github.event.schedule == '30 0 * * 2-5'
+    if: (github.event_name == 'schedule' && github.event.schedule == '30 0 * * 2-5') || (github.event_name == 'workflow_dispatch' && (inputs.run_mode == 'morning' || inputs.run_mode == 'both'))
     runs-on: ubuntu-latest
     timeout-minutes: 15
     env:
@@ -44,7 +59,6 @@ jobs:
           git add output/
           git diff --cached --quiet || git commit -m "Save morning prediction [skip ci]"
           git push
-
       - name: Upload morning result artifact
         if: always()
         uses: actions/upload-artifact@v4
@@ -55,7 +69,7 @@ jobs:
           retention-days: 14
 
   post-close-evaluation:
-    if: github.event_name == 'schedule' && github.event.schedule == '45 6 * * 1-5'
+    if: (github.event_name == 'schedule' && github.event.schedule == '45 6 * * 1-5') || (github.event_name == 'workflow_dispatch' && (inputs.run_mode == 'post_close' || inputs.run_mode == 'both'))
     runs-on: ubuntu-latest
     timeout-minutes: 8
     env:
@@ -65,19 +79,22 @@ jobs:
     steps:
       - name: Checkout latest prediction files
         uses: actions/checkout@v4
-
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.11"
           cache: pip
-
       - name: Install dependencies
         run: python -m pip install -r requirements.txt
-
       - name: Run post-close evaluation
-        run: python sox_post_close_evaluation.py
-
+        env:
+          EVALUATION_DATE: ${{ inputs.evaluation_date }}
+        run: |
+          if [ -n "$EVALUATION_DATE" ]; then
+            python sox_post_close_evaluation.py --date "$EVALUATION_DATE"
+          else
+            python sox_post_close_evaluation.py
+          fi
       - name: Save evaluation history
         run: |
           git config user.name "github-actions[bot]"
@@ -93,7 +110,6 @@ jobs:
           else
             echo "evaluation 폴더가 없어 commit을 생략합니다."
           fi
-
       - name: Upload evaluation artifact
         if: always()
         uses: actions/upload-artifact@v4
@@ -102,4 +118,3 @@ jobs:
           path: evaluation/
           if-no-files-found: ignore
           retention-days: 90
-        
