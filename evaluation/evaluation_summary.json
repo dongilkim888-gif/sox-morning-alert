@@ -1,24 +1,24 @@
 {
-  "as_of": "2026-11-06",
-  "n": 32,
+  "as_of": "2026-11-11",
+  "n": 34,
   "by_stock": {
     "원익IPS": {
-      "n": 16,
-      "mae_pct_points": 4.624075,
-      "mae_krw": 4325.99,
-      "direction_accuracy_all": 0.5,
-      "direction_accuracy_nonflat": 0.5,
-      "range_68_coverage": 0.5625,
-      "mean_error_pct_points": 2.358843
+      "n": 17,
+      "mae_pct_points": 5.229588,
+      "mae_krw": 4770.91,
+      "direction_accuracy_all": 0.470588,
+      "direction_accuracy_nonflat": 0.470588,
+      "range_68_coverage": 0.529412,
+      "mean_error_pct_points": 1.34257
     },
     "유진테크": {
-      "n": 16,
-      "mae_pct_points": 5.274955,
-      "mae_krw": 5691.38,
-      "direction_accuracy_all": 0.5625,
-      "direction_accuracy_nonflat": 0.5625,
-      "range_68_coverage": 0.625,
-      "mean_error_pct_points": 3.514432
+      "n": 17,
+      "mae_pct_points": 5.311263,
+      "mae_krw": 5641.15,
+      "direction_accuracy_all": 0.588235,
+      "direction_accuracy_nonflat": 0.588235,
+      "range_68_coverage": 0.588235,
+      "mean_error_pct_points": 2.9611
     }
   }
 }
