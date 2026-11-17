@@ -1,0 +1,66 @@
+{
+  "created_at": "2026-11-17T17:22:17.234169+09:00",
+  "target_date": "2026-11-17",
+  "model": "ridge_market_proxy",
+  "results": [
+    {
+      "name": "유진테크",
+      "ticker": "084370.KQ",
+      "sox_ret": -0.05279450139328523,
+      "open": 66100.0,
+      "today_open": 66100.0,
+      "prediction": -0.006973850610151446,
+      "predicted_intraday": -0.006973850610151446,
+      "predicted_close": 65639.02847466899,
+      "uncertainty": 0.04145177663604437,
+      "range_low_68": 62899.06603902646,
+      "range_high_68": 68378.99091031152,
+      "corr": 0.09372415615522406,
+      "train_n": 504,
+      "feature_n": 10,
+      "feature_names": [
+        "sox_ret",
+        "nasdaq_ret",
+        "usdkrw_ret",
+        "dxy_ret",
+        "vix_ret",
+        "kospi_ret",
+        "kosdaq_ret",
+        "samsung_ret",
+        "skhynix_ret",
+        "semi_etf_ret"
+      ],
+      "model": "ridge_multi_factor"
+    },
+    {
+      "name": "원익IPS",
+      "ticker": "240810.KQ",
+      "sox_ret": -0.05279450139328523,
+      "open": 69300.0,
+      "today_open": 69300.0,
+      "prediction": 0.0017426343738732373,
+      "predicted_intraday": 0.0017426343738732373,
+      "predicted_close": 69420.76456210943,
+      "uncertainty": 0.043368200695456625,
+      "range_low_68": 66415.34825391427,
+      "range_high_68": 72426.18087030457,
+      "corr": 0.029815966428703922,
+      "train_n": 504,
+      "feature_n": 10,
+      "feature_names": [
+        "sox_ret",
+        "nasdaq_ret",
+        "usdkrw_ret",
+        "dxy_ret",
+        "vix_ret",
+        "kospi_ret",
+        "kosdaq_ret",
+        "samsung_ret",
+        "skhynix_ret",
+        "semi_etf_ret"
+      ],
+      "model": "ridge_multi_factor"
+    }
+  ],
+  "message": "SOX 다중변수 아침 분석 알림\n대상일: 2026-11-17 (KST)\n\n유진테크 (084370.KQ)\n전일 SOX: -5.28%\n당일 시가: 66,100원\n예상 장중수익률: -0.70%\n예상 종가: 65,639원\n통계 범위: 62,899~68,379원\n판정: 하락 우위\n모델: Ridge 시장변수 | 변수 10개 | SOX 상관 +0.094\n\n원익IPS (240810.KQ)\n전일 SOX: -5.28%\n당일 시가: 69,300원\n예상 장중수익률: +0.17%\n예상 종가: 69,421원\n통계 범위: 66,415~72,426원\n판정: 상승 우위\n모델: Ridge 시장변수 | 변수 10개 | SOX 상관 +0.030\n\n사용 변수: SOX·환율·나스닥·VIX·KOSPI·KOSDAQ·삼성전자·SK하이닉스·반도체 ETF\n※ 실제 외국인·기관 수급 데이터는 사용하지 않습니다.\n※ 연구·분석용 알림이며 투자 권유나 주문 신호가 아닙니다."
+}
